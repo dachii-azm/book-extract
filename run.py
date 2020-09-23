@@ -1,4 +1,4 @@
-from book_extractor2 import Book_Extractor
+from book_extractor import Book_Extractor
 import sys
 
 args = sys.argv
