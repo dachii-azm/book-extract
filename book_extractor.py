@@ -111,7 +111,7 @@ class Book_Extractor():
         dist = float(np.sqrt((dx)**2 + (dy)**2))
         return dist
     
-    def choose_rect(self, cps, frame):
+    def choose_rect(self, cps):
         rects = []
         for i in range(len(cps)-3):
             for j in range(i+1, len(cps)-2):
@@ -142,17 +142,43 @@ class Book_Extractor():
 
                         if(judge_good_rect):
                             rects.append(rect)
-                            print(dists)
-                            cv2.circle(frame, rect[0], 2, (0,0,255), 5)
-                            cv2.circle(frame, rect[1], 2, (0,0,255), 5)
-                            cv2.circle(frame, rect[2], 2, (0,0,255), 5)
-                            cv2.circle(frame, rect[3], 2, (0,0,255), 5)
 
 
 
         return rects
+    
+    #def get_sum_luminance(self, cp, frame):
+    #    sum_luminance = 0
+    #    for i in range(-1, 2):
+    #        for j in range(-1, 2):
+    #            r = frame[cp[1]+i][cp[0]+j][2]
+    #            g = frame[cp[1]+i][cp[0]+j][1]
+    #            b = frame[cp[1]+i][cp[0]+j][0]
+    #            luminance = ( 0.298912 * r + 0.586611 * g + 0.114478 * b )
+    #           sum_luminance += luminance;
+    #   return sum_luminance
 
-            
+    #def pixel_values_matching(self, rects, frame):
+    #    np_rects = np.array(rects)
+    #    for i in range(np_rects.shape[0]):
+    #        for j in range(np_rects.shape[1]):
+    #            lumi = self.get_sum_luminance(np_rects[i][j], frame)
+    #            print(lumi)
+    
+    def homography_transformation(self, rect, frame):
+        li = sorted(rect, reverse=False, key=lambda x: x[0])
+        pts1 = np.float32(li)
+        
+        pts2 = np.float32([[0, 0], [90, 0], [0, 128], [90,128]])
+        print(pts1)
+        print(pts2)
+        M = cv2.getPerspectiveTransform(pts1,pts2)
+        dst = cv2.warpPerspective(frame,M,(90,128))
+        cv2.imwrite("result.jpg", dst)
+        return dst
+
+
+
 
     def run(self):
         #img = cv2.imread('./sample_image.jpg')
@@ -162,13 +188,12 @@ class Book_Extractor():
         linesL = self.detect_lines(img)
         goodLines = self.detect_goodLines(linesL, img)
         cps = self.get_good_points(goodLines, img)
-        print(cps)
-        good_rect = self.choose_rect(cps,frame)
-        print(good_rect)
+        good_rect = self.choose_rect(cps)
+        dst = self.homography_transformation(good_rect[0], frame)
         #print(good_rect)
         #print(cps)
         #print(self.calc_ptp_dists(cps))
         cv2.namedWindow('window')
-        cv2.imshow('window', frame)
+        cv2.imshow('window', dst)
         cv2.waitKey(0)
         cv2.destroyAllWindows()
